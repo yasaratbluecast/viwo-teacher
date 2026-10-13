@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ViWo Virtual Employee Video Call Test</title>
+
+   <style>
+      * {
+        box-sizing: border-box;
+      }
+    
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+    
+      body {
+        min-height: 100vh;
+        padding: 20px;
+    
+        font-family: Arial, sans-serif;
+    
+        display: flex;
+        justify-content: center;
+    
+        background-color: #f4f6f8;
+        background-image: url("./classroom-bg.png") !important;
+        background-size: cover !important;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+    
+      .page {
+        width: min(100%, 760px);
+    
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    
+        gap: 14px;
+        padding: 18px;
+    
+        border-radius: 20px;
+    
+        background: rgba(255, 255, 255, 0.84);
+    
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.20);
+      }
+    
+      h2 {
+        width: 100%;
+        margin: 0 0 2px;
+    
+        text-align: center;
+    
+        font-size: clamp(1.25rem, 4vw, 1.8rem);
+    
+        color: #1f2937;
+    
+        text-shadow: 0 1px 0 rgba(255,255,255,0.7);
+      }
+    
+    
+      /* =========================================================
+         CONTROLS CONTAINER
+         ========================================================= */
+    
+      .controls {
+        width: min(100%, 640px);
+    
+        display: flex;
+        flex-direction: column;
+    
+        gap: 8px;
+      }
+    
+    
+      /* =========================================================
+         FIRST ROW
+         Connect | Language | Talk | Leave
+         ========================================================= */
+    
+      .controls-top {
+        width: 100%;
+    
+        display: flex;
+        align-items: flex-end;
+    
+        gap: 8px;
+      }
+    
+    
+      /* =========================================================
+         SECOND ROW
+         Input | Ask Teacher
+         ========================================================= */
+    
+      .controls-bottom {
+        width: 100%;
+    
+        display: flex;
+        align-items: center;
+    
+        gap: 8px;
+      }
+    
+    
+      /* =========================================================
+         LANGUAGE
+         ========================================================= */
+    
+      .language-control {
+        display: flex;
+        flex-direction: column;
+    
+        gap: 4px;
+    
+        flex: 1 1 150px;
+    
+        min-width: 130px;
+      }
+    
+      .language-control label {
+        font-size: 12px;
+        font-weight: 600;
+    
+        color: #374151;
+    
+        padding-left: 2px;
+      }
+    
+      #speechLanguage {
+        width: 100%;
+    
+        height: 38px;
+    
+        padding: 0 10px;
+    
+        border: 1px solid #c8cdd3;
+        border-radius: 8px;
+    
+        background: white;
+    
+        font-size: 14px;
+    
+        cursor: pointer;
+      }
+    
+    
+      /* =========================================================
+         BUTTONS / INPUT
+         ========================================================= */
+    
+      button,
+      input,
+      select {
+        font-family: inherit;
+      }
+    
+      button {
+        height: 38px;
+    
+        padding: 0 14px;
+    
+        border: 1px solid #c8cdd3;
+        border-radius: 8px;
+    
+        background: white;
+    
+        font-size: 14px;
+    
+        cursor: pointer;
+    
+        white-space: nowrap;
+    
+        flex-shrink: 0;
+      }
+    
+      button:hover:not(:disabled) {
+        background: #f4f6f8;
+      }
+    
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+    
+    
+      /* Question field takes remaining width */
+    
+      #questionInput {
+        flex: 1 1 auto;
+    
+        width: 100%;
+        min-width: 0;
+    
+        height: 38px;
+    
+        padding: 0 12px;
+    
+        border: 1px solid #c8cdd3;
+        border-radius: 8px;
+    
+        background: white;
+    
+        font-size: 14px;
+      }
+    
+    
+      /* =========================================================
+         VIDEO
+         ========================================================= */
+    
+      #teacherContainer {
+        position: relative;
+    
+        width: min(100%, 640px);
+    
+        aspect-ratio: 1 / 1;
+    
+        overflow: hidden;
+    
+        background: black;
+    
+        border-radius: 12px;
+      }
+    
+      #teacherIdleImage,
+      #teacherVideo {
+        position: absolute;
+    
+        inset: 0;
+    
+        width: 100%;
+        height: 100%;
+    
+        object-fit: cover;
+      }
+    
+      #teacherIdleImage {
+        z-index: 2;
+      }
+    
+      #teacherVideo {
+        z-index: 1;
+        display: block;
+      }
+    
+    
+      /* =========================================================
+         LOG
+         ========================================================= */
+    
+      .log-panel {
+        width: min(100%, 640px);
+      }
+    
+      .log-panel summary {
+        cursor: pointer;
+        user-select: none;
+    
+        padding: 10px 12px;
+    
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    
+        background: white;
+    
+        font-weight: 600;
+    
+        list-style-position: inside;
+      }
+    
+      .log-panel[open] summary {
+        border-radius: 8px 8px 0 0;
+        border-bottom: none;
+      }
+    
+      #log {
+        width: 100%;
+    
+        height: clamp(120px, 22vh, 180px);
+    
+        overflow: auto;
+    
+        border: 1px solid #ccc;
+        border-radius: 0 0 8px 8px;
+    
+        padding: 10px;
+    
+        background: #f7f7f7;
+    
+        font-family: monospace;
+    
+        font-size: 13px;
+    
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+    
+    
+      /* =========================================================
+         TABLET / SMALL SCREEN
+         ========================================================= */
+    
+      @media (max-width: 600px) {
+    
+        body {
+          padding: 10px;
+    
+          background-attachment: scroll;
+        }
+    
+        .page {
+          gap: 10px;
+    
+          padding: 12px;
+    
+          border-radius: 14px;
+        }
+    
+    
+        /* Allow top controls to wrap */
+    
+        .controls-top {
+          flex-wrap: wrap;
+    
+          align-items: flex-end;
+    
+          gap: 6px;
+        }
+    
+    
+        /* Connect / Talk / Leave */
+    
+        .controls-top button {
+          height: 38px;
+    
+          padding: 0 10px;
+    
+          font-size: 12px;
+        }
+    
+    
+        /* Language fills available space */
+    
+        .language-control {
+          flex: 1 1 150px;
+    
+          min-width: 140px;
+        }
+    
+        .language-control label {
+          font-size: 11px;
+        }
+    
+        #speechLanguage {
+          height: 38px;
+    
+          font-size: 12px;
+        }
+    
+    
+        /* Second row stays side-by-side */
+    
+        .controls-bottom {
+          gap: 6px;
+        }
+    
+        #questionInput {
+          height: 38px;
+    
+          font-size: 12px;
+        }
+    
+        .controls-bottom button {
+          height: 38px;
+    
+          padding: 0 10px;
+    
+          font-size: 12px;
+        }
+      }
+    
+    
+      /* =========================================================
+         MOBILE
+         ========================================================= */
+    
+      @media (max-width: 480px) {
+    
+        .controls-top {
+          display: grid;
+    
+          grid-template-columns:
+            minmax(0, 1fr)
+            minmax(0, 1fr);
+    
+          gap: 7px;
+        }
+    
+    
+        /* Each top item fills one grid cell */
+    
+        .controls-top button,
+        .language-control {
+          width: 100%;
+          min-width: 0;
+        }
+    
+        .controls-top button {
+          padding: 0 8px;
+    
+          font-size: 11px;
+        }
+    
+    
+        /* Ask row */
+    
+        .controls-bottom {
+          display: grid;
+    
+          grid-template-columns:
+            minmax(0, 1fr)
+            auto;
+    
+          gap: 6px;
+        }
+    
+        #questionInput {
+          min-width: 0;
+    
+          font-size: 12px;
+        }
+    
+        .controls-bottom button {
+          padding: 0 10px;
+    
+          font-size: 11px;
+        }
+      }
+    
+    
+      /* =========================================================
+         VERY SMALL MOBILE
+         ========================================================= */
+    
+      @media (max-width: 360px) {
+    
+        .controls-top {
+          grid-template-columns: 1fr;
+        }
+    
+        .controls-bottom {
+          grid-template-columns: 1fr;
+        }
+    
+        .controls-bottom button {
+          width: 100%;
+        }
+      }
+    
+    </style>  
+</head>
+
+
+<body>
+  <main class="page">
+    <h2>ViWo AISTA - Your Science Teacher</h2>
+
+    <div id="teacherContainer">
+      <img
+        id="teacherIdleImage"
+        src="PhysicsTeacher.png"
+        alt="Virtual Teacher"
+      />
+
+      <video
+        id="teacherVideo"
+        autoplay
+        playsinline
+      ></video>
+    </div>
+
+    
+    <div class="controls">
+    
+      <div class="controls-top">
+    
+        <button id="connectBtn" onclick="connectTeacher()">
+          Connect Teacher
+        </button>
+    
+        <div class="language-control">
+          <label for="speechLanguage">Language</label>
+    
+          <select id="speechLanguage">
+            <option value="en-IN">English</option>
+            <option value="hi-IN">हिन्दी</option>
+            <option value="ar-SA">العربية</option>
+          </select>
+        </div>
+    
+        <button id="talkBtn" onclick="startListening()">
+          🎤 Talk to Teacher
+        </button>
+    
+        <button id="leaveBtn"
+                onclick="disconnectTeacher()"
+                disabled>
+          Leave
+        </button>
+    
+      </div>
+    
+    
+      <div class="controls-bottom">
+    
+        <input
+          id="questionInput"
+          type="text"
+          placeholder="Ask the teacher..."
+        />
+    
+        <button id="askBtn"
+                onclick="askTeacher()">
+          Ask Teacher
+        </button>
+    
+      </div>
+    
+    </div>
+      
+    <details class="log-panel">
+      <summary>
+            <span id="latestLogPreview"></span>
+      </summary>
+      <div id="log"></div>
+    </details>
+  </main>
+
+  <script>
+    const COLAB_URL = "http://164.52.201.28:9000/";
+    let viwoSessionId = null;
+
+    let peerConnection = null;
+    let streamId = null;
+    let sessionId = null;
+
+    function log(message, obj = null) {
+      const el = document.getElementById("log");
+      const preview = document.getElementById("latestLogPreview");
+      const time = new Date().toLocaleTimeString();
+      const line = String(message).split("\n")[0].trim();  
+        
+      el.textContent +=
+        `[${time}] ${message}\n`;
+    
+      if (obj) {
+        el.textContent +=
+          JSON.stringify(obj, null, 2) + "\n";
+      }
+    
+      // Automatically scroll to latest log
+      el.scrollTop = el.scrollHeight;
+    
+      console.log(message, obj || "");
+      preview.textContent = line ? "" + line : "";  
+    }
+
+    async function speakTeacherText(teacherText) {
+      if (!streamId || !sessionId) {
+        log("Teacher is not connected.");
+        return;
+      }
+    
+      const response = await fetch(
+        COLAB_URL + "/did/speak",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            stream_id: streamId,
+            session_id: sessionId,
+            teacher_text: teacherText
+          })
+        }
+      );
+    
+      const result = await response.json();
+    
+      log("Speak request sent.", result);
+    }
+    
+    async function askTeacher() {
+      const question =
+        document.getElementById("questionInput").value.trim();
+    
+      if (!question) {
+        log("Enter a question first.");
+        return;
+      }
+    
+      if (!streamId || !sessionId) {
+        log("Connect Teacher first.");
+        return;
+      }
+    
+      log("Student: " + question);
+      //log("Waiting for ViWo...");
+    
+      try {
+        const response = await fetch(
+          COLAB_URL + "/ask-and-speak",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              message: question,
+    
+              // ViWo conversation context
+              viwo_session_id: viwoSessionId,
+    
+              // Existing D-ID WebRTC session
+              stream_id: streamId,
+              session_id: sessionId
+            })
+          }
+        );
+    
+        const result = await response.json();
+    
+        console.log(result);
+    
+        if (result.error) {
+          log("ERROR: " + result.error);
+          return;
+        }
+    
+        // Save ViWo session ID for the NEXT question
+        viwoSessionId = result.viwo_session_id;
+    
+        log("Teacher: " + result.teacher_text);
+        //log("ViWo session: " + viwoSessionId);
+    
+        document.getElementById("questionInput").value = "";
+    
+      } catch (error) {
+        log("Ask error: " + error.message);
+        console.error(error);
+      }
+    }
+      
+    async function connectTeacher() {
+      try {
+        log("Trying to Connect Your Teacher...");
+          
+        document.getElementById("connectBtn").disabled = true;
+        document.getElementById("leaveBtn").disabled = false;
+        document.getElementById("askBtn").disabled = true;
+          
+        const response = await fetch(
+          COLAB_URL + "/did/connect",
+          {
+            method: "POST"
+          }
+        );
+        
+        const data = await response.json();
+
+        log("Ringing....");
+
+        streamId = data.id;
+        sessionId = data.session_id;
+
+        //log("Stream ID: " + streamId);
+        //log("Session ID: " + sessionId);
+
+        peerConnection = new RTCPeerConnection({
+          iceServers: data.ice_servers
+        });
+
+        let introductionStarted = false;
+        
+        peerConnection.onconnectionstatechange = async () => {
+          const state = peerConnection.connectionState;
+        
+          log("Connection state: " + state);
+        
+          if (state === "connected" && !introductionStarted) {
+            introductionStarted = true;
+            document.getElementById("askBtn").disabled = false;
+            await startTeacherIntroduction();
+          }
+        };
+        peerConnection.oniceconnectionstatechange = () => {
+          log(
+            "Availabilty Status: " +
+            peerConnection.iceConnectionState
+          );
+        };
+
+        peerConnection.ontrack = (event) => {
+          //log("Remote track received: " + event.track.kind);
+        
+          const video = document.getElementById("teacherVideo");
+        
+          if (event.streams && event.streams[0]) {
+            video.srcObject = event.streams[0];
+        
+            // Don't show D-ID video yet.
+            // Keep showing our teacher photo.
+            video.play().catch(error => {
+              console.log("Video play waiting:", error);
+            });
+          }
+        };
+
+        peerConnection.onicecandidate = async (event) => {
+          if (!event.candidate) {
+            //log("ICE gathering complete.");
+            return;
+          }
+        
+          //log("Local ICE candidate generated.");
+        
+          try {
+            const response = await fetch(
+              COLAB_URL + "/did/ice",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  stream_id: streamId,
+                  session_id: sessionId,
+                  candidate: event.candidate.toJSON()
+                })
+              }
+            );
+        
+            const result = await response.json();
+        
+            //log("ICE candidate sent to D-ID.", result);
+        
+          } catch (error) {
+            log("ICE send error: " + error.message);
+          }
+        };
+
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(data.offer)
+        );
+
+        //log("Remote SDP offer applied.");
+
+        const answer =
+          await peerConnection.createAnswer();
+
+        await peerConnection.setLocalDescription(answer);
+
+        //log("Local SDP answer created.");
+
+        const sdpResponse = await fetch(
+          COLAB_URL + "/did/sdp",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              stream_id: streamId,
+              session_id: sessionId,
+              answer: {
+                type: answer.type,
+                sdp: answer.sdp
+              }
+            })
+          }
+        );
+
+        const sdpResult = await sdpResponse.json();
+
+        //log("SDP answer sent to D-ID.", sdpResult);
+
+      } catch (error) {
+        log("ERROR: " + error.message);
+        console.error(error);
+      }
+    }
+
+    function showLiveTeacher() {
+      const video = document.getElementById("teacherVideo");
+      const image = document.getElementById("teacherIdleImage");
+    
+      //log("Waiting for live teacher video frames...");
+    
+      const trySwitch = () => {
+        if (
+          video.readyState >= 2 &&
+          video.videoWidth > 0 &&
+          video.videoHeight > 0
+        ) {
+          image.style.display = "none";
+          video.style.zIndex = "3";
+    
+          log("Live teacher video call started");
+          return;
+        }
+    
+        requestAnimationFrame(trySwitch);
+      };
+    
+      trySwitch();
+    }
+      
+    async function startTeacherIntroduction() {
+      if (!streamId || !sessionId) {
+        log("Sorry! Teacher is not ready now.");
+        return;
+      }
+    
+      //log("Starting teacher introduction...");
+    
+      try {
+        const response = await fetch(
+          COLAB_URL + "/ask-and-speak",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              message:
+                "Introduce yourself briefly as the student's friendly virtual teacher. " +
+                "Keep it short, warm, and engaging. " +
+                "Then ask the student what they would like to learn today.",
+    
+              viwo_session_id: viwoSessionId,
+              stream_id: streamId,
+              session_id: sessionId
+            })
+          }
+        );
+    
+        const result = await response.json();
+    
+        if (result.error) {
+          log("Introduction error: " + result.error);
+          return;
+        }
+    
+        viwoSessionId = result.viwo_session_id;
+    
+        log("Teacher introduction: " + result.teacher_text);
+        //log("ViWo session started: " + viwoSessionId);
+        // Give D-ID a moment to start rendering the speaking avatar
+        //setTimeout(() => {
+        showLiveTeacher();
+        //}, 1200);
+    
+      } catch (error) {
+        log("Introduction failed: " + error.message);
+      }
+    }
+    
+      
+    async function leaveTeacher() {
+      log("You are leaving video call...");
+    
+      try {
+        // 1. Ask backend to close D-ID stream
+        if (streamId && sessionId) {
+          try {
+            const response = await fetch(
+              COLAB_URL + "/did/disconnect",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  stream_id: streamId,
+                  session_id: sessionId
+                })
+              }
+            );
+    
+            const result = await response.json();
+            log("Disconnected:", result);
+    
+          } catch (error) {
+            log("D-ID disconnect error: " + error.message);
+          }
+        }
+    
+        // 2. Stop remote media tracks
+        const video =
+          document.getElementById("teacherVideo");
+    
+        if (video.srcObject) {
+          video.srcObject
+            .getTracks()
+            .forEach(track => track.stop());
+    
+          video.srcObject = null;
+        }
+    
+        // 3. Close WebRTC peer connection
+        if (peerConnection) {
+          peerConnection.ontrack = null;
+          peerConnection.onicecandidate = null;
+          peerConnection.onconnectionstatechange = null;
+          peerConnection.oniceconnectionstatechange = null;
+    
+          peerConnection.close();
+          peerConnection = null;
+        }
+    
+        // 4. Clear D-ID session
+        streamId = null;
+        sessionId = null;
+    
+        // 5. Clear ViWo conversation session
+        viwoSessionId = null;
+    
+        // 6. Restore teacher image
+        const image =
+          document.getElementById("teacherIdleImage");
+    
+        image.style.display = "block";
+        image.style.opacity = "1";
+        image.style.zIndex = "5";
+    
+        // Use your normal teacher image again
+        image.src = "./PhysicsTeacher.png";
+    
+        // 7. Reset UI
+        document.getElementById("connectBtn").disabled = false;
+        document.getElementById("leaveBtn").disabled = true;
+        document.getElementById("askBtn").disabled = true;
+    
+        log("Video call closed.");
+    
+      } catch (error) {
+        log("Leave error: " + error.message);
+        console.error(error);
+      }
+    }
+
+    // const SpeechRecognition =
+    //   window.SpeechRecognition ||
+    //   window.webkitSpeechRecognition;
+    
+    // let recognition = null;
+    
+    // if (SpeechRecognition) {
+    //   recognition = new SpeechRecognition();
+    
+    //   recognition.lang = "en-US";
+    //   recognition.interimResults = false;
+    //   recognition.continuous = false;
+    
+    //   recognition.onstart = () => {
+    //     log("Listening...");
+    //     document.getElementById("talkBtn").disabled = true;
+    //   };
+    
+    //   recognition.onresult = async (event) => {
+    //     const transcript =
+    //       event.results[0][0].transcript.trim();
+    
+    //     log("You said: " + transcript);
+    
+    //     document.getElementById("questionInput").value =
+    //       transcript;
+    
+    //     await askTeacher();
+    //   };
+    
+    //   recognition.onerror = (event) => {
+    //     log("Speech recognition error: " + event.error);
+    
+    //     document.getElementById("talkBtn").disabled = false;
+    //   };
+    
+    //   recognition.onend = () => {
+    //     document.getElementById("talkBtn").disabled = false;
+    //   };
+    // } else {
+    //   log("Speech recognition is not supported in this browser.");
+    // }
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+    
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    
+    function startListening() {
+    
+        const language =
+            document.getElementById("speechLanguage").value;
+    
+        recognition.lang = language;
+    
+        log("Listening... Language: " + language);
+    
+        recognition.start();
+    }
+    
+    recognition.onstart = () => {
+        log("🎤 Listening...");
+    };
+    
+    recognition.onresult = async (event) => {
+    
+        const transcript =
+            event.results[0][0].transcript.trim();
+    
+        log("Student said: " + transcript);
+    
+        document.getElementById("questionInput").value =
+            transcript;
+    
+        // Automatically send speech to ViWo
+        await askTeacher();
+    };
+    
+    recognition.onerror = (event) => {
+        log("Speech recognition error: " + event.error);
+    };
+    
+    recognition.onend = () => {
+        log("Microphone stopped.");
+    };
+      
+      
+    document
+      .getElementById("connectBtn")
+      .addEventListener(
+        "click",
+        connectTeacher
+      );
+
+    document
+      .getElementById("askBtn")
+      .addEventListener("click", askTeacher);
+
+    document
+      .getElementById("questionInput")
+      .addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          askTeacher();
+        }
+      });
+    
+    document
+      .getElementById("leaveBtn")
+      .addEventListener("click", leaveTeacher);
+      
+    document
+      .getElementById("talkBtn")
+      .addEventListener("click", () => {
+        if (!recognition) {
+          log("Speech recognition is unavailable.");
+          return;
+        }
+    
+        if (!streamId || !sessionId) {
+          log("Connect Teacher first.");
+          return;
+        }
+    
+        recognition.start();
+      });
+  </script>
+
+</body>
+</html>
